@@ -1,0 +1,757 @@
+/* ==========================================================================
+   PT MAKMUR BERSAMA ENJINIRING (MBE) - COMPANY PROFILE CSS DESIGN SYSTEM
+   Exact PDF Layout & Color Matching (#0191b3)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #0191b3;
+  --primary-dark: #007694;
+  --primary-light: #e0f4f8;
+  --primary-gradient: linear-gradient(135deg, #0191b3 0%, #005f77 100%);
+  --secondary: #12181f;
+  --accent: #20c997;
+  --dark: #12181f;
+  --text-dark: #2c3e50;
+  --text-muted: #6c757d;
+  --light-bg: #f8f9fa;
+  --footer-bg: #e9ecef;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.14);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 50px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-dark);
+  background-color: #ffffff;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition);
+}
+
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ==========================================================================
+   TOP BLUE INFO BAR (#0191b3)
+   ========================================================================== */
+.top-info-bar {
+  background-color: #0191b3;
+  color: #ffffff;
+  padding: 8px 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.top-info-bar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-info-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.top-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-info-item a:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+.top-info-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.social-links a:hover {
+  transform: translateY(-2px);
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   MAIN NAVBAR
+   ========================================================================== */
+.main-navbar {
+  background: #ffffff;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: var(--transition);
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.navbar-brand img {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-link {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #333333;
+  padding: 8px 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: #0191b3;
+}
+
+.nav-item-dropdown {
+  position: relative;
+}
+
+.dropdown-menu-custom {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 260px;
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-sm);
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: var(--transition);
+  z-index: 1100;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.nav-item-dropdown:hover .dropdown-menu-custom {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item-custom {
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: var(--transition);
+}
+
+.dropdown-item-custom:hover {
+  background-color: var(--primary-light);
+  color: #0191b3;
+  padding-left: 22px;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lang-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.nav-icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.05rem;
+  color: #333333;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.nav-icon-btn:hover {
+  color: #0191b3;
+}
+
+.mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #333333;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   CONTAINER & SECTION HEADERS
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-padding {
+  padding: 60px 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Decorative PDF Section Title */
+.pdf-section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.pdf-section-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #2b2b2b;
+  display: inline-block;
+}
+
+.pdf-header-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.pdf-header-divider span {
+  width: 60px;
+  height: 3px;
+  background-color: #0191b3;
+  border-radius: 2px;
+}
+
+.pdf-header-divider i {
+  color: #0191b3;
+  font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   BUTTONS (PILL STYLE MATCHING PDF)
+   ========================================================================== */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 28px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  text-align: center;
+}
+
+.btn-pill-primary {
+  background-color: #0191b3;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(1, 145, 179, 0.3);
+}
+
+.btn-pill-primary:hover {
+  background-color: #007694;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(1, 145, 179, 0.4);
+}
+
+.btn-pill-green {
+  background-color: #00a859;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 168, 89, 0.3);
+}
+
+.btn-pill-green:hover {
+  background-color: #008746;
+  transform: translateY(-2px);
+}
+
+.btn-pill-outline {
+  background: transparent;
+  color: #0191b3;
+  border: 2px solid #0191b3;
+}
+
+.btn-pill-outline:hover {
+  background: #0191b3;
+  color: #ffffff;
+}
+
+/* Floating WhatsApp Button */
+.whatsapp-float {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 55px;
+  height: 55px;
+  background-color: #25d366;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  z-index: 9999;
+  transition: var(--transition);
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   HERO BANNER (PAGE 1)
+   ========================================================================== */
+.hero-banner-pdf, .pdf-hero {
+  position: relative;
+  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.75)), url('../../assets/images/page_beranda/foto fabrikasi pengganti video.png') center/cover no-repeat;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  padding: 80px 20px 100px;
+}
+
+.pdf-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.75));
+  z-index: 1;
+}
+
+.pdf-hero-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.pdf-hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pdf-hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.pdf-hero-description {
+  font-size: 1.2rem;
+  color: #ffffff;
+  max-width: 750px;
+  margin: 0 auto 30px;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+.hero-banner-pdf h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.hero-banner-pdf p {
+  font-size: 1.2rem;
+  max-width: 750px;
+  margin: 0 auto 30px;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+/* Floating Stats Strip (Matching Page 1) */
+.stats-strip {
+  position: relative;
+  z-index: 10;
+  margin-top: -45px;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 24px 20px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.stat-item {
+  border-right: 1px solid #e2e8f0;
+  padding: 0 15px;
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0191b3;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Page Sub Banner */
+.page-sub-banner {
+  background: #ffffff;
+  padding: 40px 0 20px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   GRID LAYOUTS & CARDS
+   ========================================================================== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+/* Services Square Cards (PDF Page 1 & 3) */
+.service-square-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 170px;
+  cursor: pointer;
+}
+
+.service-square-card:hover, .service-square-card.active {
+  background-color: #0191b3;
+  color: #ffffff !important;
+  border-color: #0191b3;
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.service-square-card img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.service-square-card:hover img, .service-square-card.active img {
+  filter: brightness(0) invert(1);
+}
+
+.service-square-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* News Section Cards (PDF Page 1) */
+.news-featured-card {
+  background: #222222;
+  border-radius: 4px;
+  overflow: hidden;
+  color: #ffffff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.news-featured-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.news-featured-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.news-list-item {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.news-list-thumb {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.news-badge {
+  display: inline-block;
+  background-color: #0191b3;
+  color: #ffffff;
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Product Dark Category Box (PDF Page 1) */
+.product-interactive-box {
+  background: url('/assets/images/page_beranda/foto produk kami fabrikasi.png') center/cover no-repeat;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  padding: 50px;
+  color: #ffffff;
+}
+
+.product-interactive-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.product-interactive-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.product-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-menu-item {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.product-menu-item.active, .product-menu-item:hover {
+  color: #ffffff;
+  font-weight: 800;
+  transform: translateX(10px);
+}
+
+/* ==========================================================================
+   PDF LIGHT GRAY FOOTER (MATCHING PDF EXACTLY)
+   ========================================================================== */
+.footer-pdf {
+  background-color: #e9ecef;
+  color: #333333;
+  padding: 40px 0 30px;
+  font-size: 0.9rem;
+  border-top: 1px solid #dcdcdc;
+}
+
+.footer-pdf-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.footer-pdf-brand img {
+  height: 52px;
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.footer-pdf-support {
+  margin-top: 14px;
+}
+
+.footer-pdf-support span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666666;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.footer-pdf-support img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.footer-pdf-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #222222;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.footer-pdf-title::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background-color: #0191b3;
+  margin-top: 4px;
+}
+
+.footer-pdf-item {
+  margin-bottom: 12px;
+}
+
+.footer-pdf-label {
+  font-weight: 700;
+  color: #222222;
+  margin-bottom: 4px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .grid-5, .grid-4, .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-2, .footer-pdf-grid {
+    grid-template-columns: 1fr;
+  }
+  .mobile-toggle {
+    display: block;
+  }
+  .nav-menu {
+    display: none;
+  }
+  .hero-banner-pdf h1 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .grid-5, .grid-4, .grid-3, .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .top-info-left {
+    display: none;
+  }
+}

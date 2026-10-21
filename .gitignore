@@ -1,0 +1,10 @@
+*.log
+.DS_Store
+.phpactor.json
+.phpunit.result.cache
+/.idea
+/.vscode
+/node_modules
+/public/build
+/public/hot
+Thumbs.db
