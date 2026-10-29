@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\PortfolioController;
-use App\Http\Controllers\NewsController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\AdminNewsController;
 use App\Http\Controllers\Admin\AdminProductCategoryController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServiceController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +47,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware([\App\Http\Middleware\AdminAuth::class])->group(function () {
         Route::get('/', [AdminNewsController::class, 'index'])->name('dashboard');
-        
+
         // News CMS
         Route::get('/news', [AdminNewsController::class, 'index'])->name('news.index');
         Route::get('/news/create', [AdminNewsController::class, 'create'])->name('news.create');
@@ -56,6 +56,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/news/{id}', [AdminNewsController::class, 'update'])->name('news.update');
         Route::delete('/news/{id}', [AdminNewsController::class, 'destroy'])->name('news.destroy');
         Route::post('/news/{id}/toggle-headline', [AdminNewsController::class, 'toggleHeadline'])->name('news.toggle-headline');
+        Route::post('/news/analyze-seo', [AdminNewsController::class, 'analyzeSeo'])->name('news.analyze-seo');
+        Route::post('/news/upload-inline-image', [AdminNewsController::class, 'uploadInlineImage'])->name('news.upload-inline-image');
 
         // Master Product Categories
         Route::resource('product-categories', AdminProductCategoryController::class);

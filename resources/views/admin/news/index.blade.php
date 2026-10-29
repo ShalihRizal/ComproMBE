@@ -60,17 +60,21 @@
                     </td>
                     <td class="text-center">
                         @php $status = $item->seo_status; @endphp
-                        @if($item->seo_score >= 80)
-                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 fw-bold">
-                                <i class="fa-solid fa-chart-line"></i> {{ $item->seo_score }}% (Bagus)
+                        @if(empty($item->focus_keyword))
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2 fw-bold" title="Focus keyword belum ditentukan">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ $item->seo_score }}% (Belum Lengkap)
                             </span>
-                        @elseif($item->seo_score >= 50)
+                        @elseif($item->seo_score >= 80)
+                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2 fw-bold">
+                                <i class="fa-solid fa-circle-check"></i> {{ $item->seo_score }}% (Bagus)
+                            </span>
+                        @elseif($item->seo_score >= 60)
                             <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 fw-bold">
-                                <i class="fa-solid fa-chart-line"></i> {{ $item->seo_score }}% (Perlu Perbaikan)
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ $item->seo_score }}% (Perlu Perbaikan)
                             </span>
                         @else
                             <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-2 fw-bold">
-                                <i class="fa-solid fa-chart-line"></i> {{ $item->seo_score }}% (Kurang)
+                                <i class="fa-solid fa-circle-xmark"></i> {{ $item->seo_score }}% (Kurang)
                             </span>
                         @endif
                     </td>

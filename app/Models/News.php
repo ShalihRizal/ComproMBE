@@ -17,6 +17,7 @@ class News extends Model
         'slug',
         'published_at',
         'image',
+        'image_alt',
         'excerpt',
         'content',
         'is_headline',
@@ -43,68 +44,38 @@ class News extends Model
         });
     }
 
-    public static function calculateSeoScore($model)
+    public static function calculateSeoScore($model): int
     {
-        $score = 0;
-        $title = $model->title ?? '';
-        $metaDesc = $model->meta_description ?? '';
-        $content = strip_tags($model->content ?? '');
-        $keyword = strtolower(trim($model->focus_keyword ?? ''));
-        $image = $model->image ?? '';
-
-        // 1. Title Length Check (40-60 chars) - 20 pts
-        $titleLen = mb_strlen($title);
-        if ($titleLen >= 35 && $titleLen <= 65) {
-            $score += 20;
-        } elseif ($titleLen > 15) {
-            $score += 10;
-        }
-
-        // 2. Meta Description Check (120-160 chars) - 20 pts
-        $descLen = mb_strlen($metaDesc);
-        if ($descLen >= 110 && $descLen <= 170) {
-            $score += 20;
-        } elseif ($descLen > 30) {
-            $score += 10;
-        }
-
-        // 3. Content Length Check (>= 150 words) - 20 pts
-        $wordCount = str_word_count($content);
-        if ($wordCount >= 200) {
-            $score += 20;
-        } elseif ($wordCount >= 80) {
-            $score += 10;
-        }
-
-        // 4. Focus Keyword Check - 20 pts
-        if (!empty($keyword)) {
-            $kwInTitle = str_contains(strtolower($title), $keyword);
-            $kwInDesc = str_contains(strtolower($metaDesc), $keyword);
-            $kwInContent = str_contains(strtolower($content), $keyword);
-
-            if ($kwInTitle && $kwInContent) {
-                $score += 20;
-            } elseif ($kwInTitle || $kwInContent || $kwInDesc) {
-                $score += 10;
-            }
-        }
-
-        // 5. Featured Image Check - 20 pts
-        if (!empty($image)) {
-            $score += 20;
-        }
-
-        return min(100, $score);
+        return app(\App\Services\SeoScoringService::class)->calculateScore($model);
     }
 
-    public function getSeoStatusAttribute()
+    public function getSeoAnalysisAttribute(): array
     {
+        return app(\App\Services\SeoScoringService::class)->analyze($this);
+    }
+
+    public function getSeoStatusAttribute(): array
+    {
+        if (empty($this->focus_keyword)) {
+            return ['label' => 'Belum Lengkap (Incomplete)', 'class' => 'badge-seo-incomplete', 'color' => '#64748b'];
+        }
+
         if ($this->seo_score >= 80) {
             return ['label' => 'Bagus (Good)', 'class' => 'badge-seo-good', 'color' => '#00a859'];
-        } elseif ($this->seo_score >= 50) {
+        } elseif ($this->seo_score >= 60) {
             return ['label' => 'Perlu Perbaikan (OK)', 'class' => 'badge-seo-ok', 'color' => '#ff9800'];
         } else {
             return ['label' => 'Kurang (Poor)', 'class' => 'badge-seo-poor', 'color' => '#f44336'];
         }
+    }
+
+    public function getImageAltOrTitleAttribute(): string
+    {
+        return ! empty($this->image_alt) ? $this->image_alt : $this->title;
+    }
+
+    public function getEffectiveTitleAttribute(): string
+    {
+        return ! empty($this->meta_title) ? $this->meta_title : $this->title;
     }
 }

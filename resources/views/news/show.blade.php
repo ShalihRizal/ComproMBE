@@ -1,11 +1,92 @@
 @extends('layouts.app')
 
-@section('title', ($news->meta_title ?? $news->title) . ' - PT Makmur Bersama Enjiniring')
+@php
+    $pageTitle = $news->meta_title ?: $news->title;
+    $metaDescription = $news->meta_description ?: ($news->excerpt ?: \Illuminate\Support\Str::limit(strip_tags($news->content), 155));
+    $canonicalUrl = route('news.show', $news->slug);
+    $imageUrl = $news->image ? asset($news->image) : asset('assets/images/page_beranda/logo makben.png');
+    $altText = $news->image_alt_or_title;
+@endphp
+
+@section('title', $pageTitle . ' - PT Makmur Bersama Enjiniring')
+@section('meta_description', $metaDescription)
+@if($news->focus_keyword)
+@section('meta_keywords', $news->focus_keyword . ', PT Makmur Bersama Enjiniring, Berita MBE')
+@endif
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $pageTitle)
+@section('og_image', $imageUrl)
+
+@push('schema')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": {!! json_encode(strip_tags($pageTitle), JSON_HEX_TAG | JSON_HEX_AMP) !!},
+  "description": {!! json_encode(strip_tags($metaDescription), JSON_HEX_TAG | JSON_HEX_AMP) !!},
+  "image": [{!! json_encode($imageUrl, JSON_HEX_TAG | JSON_HEX_AMP) !!}],
+  "datePublished": {!! json_encode($news->published_at ? $news->published_at->toIso8601String() : $news->created_at->toIso8601String()) !!},
+  "dateModified": {!! json_encode($news->updated_at->toIso8601String()) !!},
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": {!! json_encode($canonicalUrl, JSON_HEX_TAG | JSON_HEX_AMP) !!}
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "PT Makmur Bersama Enjiniring",
+    "url": {!! json_encode(url('/'), JSON_HEX_TAG | JSON_HEX_AMP) !!}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "PT Makmur Bersama Enjiniring",
+    "logo": {
+      "@type": "ImageObject",
+      "url": {!! json_encode(asset('assets/images/page_beranda/logo makben.png'), JSON_HEX_TAG | JSON_HEX_AMP) !!}
+    }
+  }
+}
+</script>
+@endpush
 
 @push('styles')
-@if($news->meta_description)
-<meta name="description" content="{{ $news->meta_description }}">
-@endif
+<style>
+    .article-body h2, .article-body h3 {
+        color: #12181f;
+        font-weight: 800;
+        margin-top: 36px;
+        margin-bottom: 16px;
+        line-height: 1.35;
+    }
+    .article-body h2 {
+        font-size: 1.65rem;
+    }
+    .article-body h3 {
+        font-size: 1.35rem;
+    }
+    .article-body p {
+        margin-bottom: 18px;
+        line-height: 1.85;
+    }
+    .article-body figure {
+        margin: 32px 0;
+        text-align: left;
+    }
+    .article-body figure img, .article-body img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        margin: 12px 0;
+    }
+    .article-body figcaption {
+        font-size: 0.88rem;
+        color: #64748b;
+        margin-top: 8px;
+        font-weight: 500;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -36,7 +117,7 @@
 
         @if($news->image)
         <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-md);">
-            <img src="{{ asset($news->image) }}" alt="{{ $news->title }}" style="width: 100%; max-height: 480px; object-fit: cover;">
+            <img src="{{ asset($news->image) }}" alt="{{ $altText }}" style="width: 100%; max-height: 480px; object-fit: cover;">
         </div>
         @endif
 

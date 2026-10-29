@@ -7,8 +7,29 @@
     <title>@yield('title', 'PT. Makmur Bersama Enjiniring') - Solusi Fabrikasi, Machining CNC & Industrial</title>
     
     <!-- Meta SEO -->
+    @hasSection('meta_description')
+    <meta name="description" content="@yield('meta_description')">
+    @else
     <meta name="description" content="PT Makmur Bersama Enjiniring menghadirkan layanan profesional di bidang Fabrikasi, Machining CNC, Manufaktur, Extruder & Injeksi plastik, Laser cutting, Bending, Roll Plat & pipa.">
-    <meta name="keywords" content="Makmur Bersama Enjiniring, MBE, Fabrikasi Cirebon, Machining CNC, Manufaktur, Laser Cutting, Bending, Piping, Ducting">
+    @endif
+    <meta name="keywords" content="@yield('meta_keywords', 'Makmur Bersama Enjiniring, MBE, Fabrikasi Cirebon, Machining CNC, Manufaktur, Laser Cutting, Bending, Piping, Ducting')">
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="@yield('canonical_url', url()->current())">
+    <meta property="og:title" content="@yield('og_title', 'PT. Makmur Bersama Enjiniring')">
+    <meta property="og:description" content="@yield('meta_description', 'PT Makmur Bersama Enjiniring menghadirkan layanan profesional di bidang Fabrikasi, Machining CNC, Manufaktur, Extruder & Injeksi plastik, Laser cutting, Bending, Roll Plat & pipa.')">
+    <meta property="og:image" content="@yield('og_image', asset('assets/images/page_beranda/logo makben.png'))">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="@yield('canonical_url', url()->current())">
+    <meta name="twitter:title" content="@yield('og_title', 'PT. Makmur Bersama Enjiniring')">
+    <meta name="twitter:description" content="@yield('meta_description', 'PT Makmur Bersama Enjiniring menghadirkan layanan profesional di bidang Fabrikasi, Machining CNC, Manufaktur, Extruder & Injeksi plastik, Laser cutting, Bending, Roll Plat & pipa.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('assets/images/page_beranda/logo makben.png'))">
+
+    @stack('schema')
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/images/page_beranda/logo makben.png') }}">

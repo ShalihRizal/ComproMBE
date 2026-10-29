@@ -8,3 +8,21 @@
 /public/build
 /public/hot
 Thumbs.db
+
+# Laravel Runtime & Cache
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/logs/*.log
+!/storage/logs/.gitignore
+
+# AI Tools & Local IDE Configs
+.mcp.json
+boost.json
+opencode.json
+
