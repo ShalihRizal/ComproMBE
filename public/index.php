@@ -36,6 +36,60 @@ require __DIR__.'/../vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
+| Ensure Environment Configuration Exists
+|--------------------------------------------------------------------------
+|
+| On shared hosting deployments where .env is not uploaded directly,
+| initialize the production environment configuration if missing.
+|
+*/
+if (!file_exists(__DIR__.'/../.env')) {
+    @file_put_contents(__DIR__.'/../.env', implode("\n", [
+        'APP_NAME="PT Makmur Bersama Enjiniring"',
+        'APP_ENV=production',
+        'APP_KEY=base64:m1S0d77ZSdlfhA/kjyR64iCLtTynxN+zA4mv09Xn+Ac=',
+        'APP_DEBUG=false',
+        'APP_URL=https://makben.co.id',
+        '',
+        'APP_LOCALE=en',
+        'APP_FALLBACK_LOCALE=en',
+        '',
+        'LOG_CHANNEL=stack',
+        'LOG_STACK=single',
+        'LOG_LEVEL=error',
+        '',
+        'DB_CONNECTION=mysql',
+        'DB_HOST=127.0.0.1',
+        'DB_PORT=3306',
+        'DB_DATABASE=u203934978_mbe',
+        'DB_USERNAME=u203934978_mbe',
+        'DB_PASSWORD=6f6f8f8dd726cd3e5a38A1!',
+        '',
+        'SESSION_DRIVER=file',
+        'SESSION_LIFETIME=120',
+        'SESSION_ENCRYPT=false',
+        '',
+        'CACHE_STORE=file',
+        'CACHE_DRIVER=file',
+        'QUEUE_CONNECTION=sync',
+        'FILESYSTEM_DISK=local',
+        '',
+    ]));
+}
+
+// Clean up stale compiled view cache and deploy archive once
+if (!file_exists(__DIR__.'/../storage/framework/views/.cleanup_done')) {
+    foreach (glob(__DIR__.'/../storage/framework/views/*.php') as $f) {
+        @unlink($f);
+    }
+    foreach (glob(__DIR__.'/../*.zip') as $z) {
+        @unlink($z);
+    }
+    @touch(__DIR__.'/../storage/framework/views/.cleanup_done');
+}
+
+/*
+|--------------------------------------------------------------------------
 | Run The Application
 |--------------------------------------------------------------------------
 |
