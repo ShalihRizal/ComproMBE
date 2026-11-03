@@ -19,10 +19,35 @@
 <!-- NEWS GRID SECTION -->
 <section class="section-padding" style="background-color: #ffffff;">
     <div class="container">
+        <!-- CATEGORY FILTER PILLS -->
+        @if(isset($categories) && count($categories) > 0)
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 36px;">
+            <a href="{{ route('news.index') }}" 
+               class="btn-pill {{ empty($currentCategory) ? 'btn-pill-primary' : 'btn-pill-outline' }}"
+               style="padding: 6px 18px; font-size: 0.88rem; font-weight: 700; text-decoration: none;">
+                Semua Kategori
+            </a>
+            @foreach($categories as $catKey => $catName)
+            <a href="{{ route('news.index', ['kategori' => $catKey]) }}" 
+               class="btn-pill {{ ($currentCategory ?? '') === $catKey ? 'btn-pill-primary' : 'btn-pill-outline' }}"
+               style="padding: 6px 18px; font-size: 0.88rem; font-weight: 700; text-decoration: none;">
+                {{ $catName }}
+            </a>
+            @endforeach
+        </div>
+        @endif
+
         <div class="grid-3">
             @forelse($newsList as $item)
             <div class="news-card" style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
-                <img src="{{ $item->image ? asset($item->image) : asset('assets/images/page_beranda/foto produk kami machining CNC.png') }}" alt="{{ $item->title }}" class="news-img" style="height: 200px; object-fit: cover;">
+                <div style="position: relative;">
+                    <img src="{{ $item->image ? asset($item->image) : asset('assets/images/page_beranda/foto produk kami machining CNC.png') }}" alt="{{ $item->title }}" class="news-img" style="height: 200px; width: 100%; object-fit: cover;">
+                    @if($item->category)
+                    <span style="position: absolute; top: 12px; left: 12px; background: rgba(1, 145, 179, 0.9); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px);">
+                        <i class="fa-solid fa-tag"></i> {{ $item->category }}
+                    </span>
+                    @endif
+                </div>
                 <div class="news-body" style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
                     <div class="news-date" style="color: #0191b3; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">
                         <i class="fa-regular fa-calendar-days"></i> {{ \Carbon\Carbon::parse($item->published_at)->format('d M Y') }}
@@ -42,7 +67,7 @@
             </div>
             @empty
             <div style="grid-column: 1 / -1; text-align: center; padding: 60px 0; color: #718096;">
-                Belum ada artikel berita yang diterbitkan.
+                Belum ada artikel berita yang diterbitkan{{ !empty($currentCategory) ? ' untuk kategori ' . $currentCategory : '' }}.
             </div>
             @endforelse
         </div>

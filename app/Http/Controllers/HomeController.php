@@ -22,13 +22,13 @@ class HomeController extends Controller
             ['title' => 'Piping', 'icon' => asset('assets/images/page_beranda/icon piping.png'), 'desc' => 'Instalasi perpipaan gas industri & LPG dari sumber ke konsumsi.'],
         ];
 
-        // Fetch dynamic Headline article & Recent articles from DB
-        $headlineNews = News::where('is_headline', true)->orderBy('published_at', 'desc')->first();
+        // Fetch dynamic Headline article & Recent articles from DB (published only)
+        $headlineNews = News::published()->where('is_headline', true)->orderBy('published_at', 'desc')->first();
         if (!$headlineNews) {
-            $headlineNews = News::orderBy('published_at', 'desc')->first();
+            $headlineNews = News::published()->orderBy('published_at', 'desc')->first();
         }
 
-        $recentNews = News::where('id', '!=', optional($headlineNews)->id)
+        $recentNews = News::published()->where('id', '!=', optional($headlineNews)->id)
             ->orderBy('published_at', 'desc')
             ->take(3)
             ->get();

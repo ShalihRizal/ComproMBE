@@ -152,7 +152,8 @@
                 </a>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                @stack('top_actions')
                 <a href="{{ route('home') }}" target="_blank" class="btn btn-sm btn-mbe-outline d-none d-sm-inline-flex align-items-center gap-2">
                     <i class="fa-solid fa-globe"></i> Lihat Website
                 </a>

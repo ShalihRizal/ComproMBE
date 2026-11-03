@@ -12,24 +12,36 @@ class News extends Model
 
     protected $table = 'news';
 
+    public const CATEGORIES = [
+        'CNC' => 'CNC',
+        'Fabrikasi' => 'Fabrikasi',
+        'Laser Cutting' => 'Laser Cutting',
+        'General Trading' => 'General Trading',
+        'Bending' => 'Bending',
+    ];
+
     protected $fillable = [
         'title',
         'slug',
         'published_at',
+        'status',
+        'category',
         'image',
         'image_alt',
         'excerpt',
         'content',
         'is_headline',
         'focus_keyword',
+        'secondary_keywords',
         'meta_title',
         'meta_description',
         'seo_score',
     ];
 
     protected $casts = [
-        'published_at' => 'date',
+        'published_at' => 'datetime',
         'is_headline' => 'boolean',
+        'secondary_keywords' => 'array',
     ];
 
     public static function boot()
@@ -40,8 +52,45 @@ class News extends Model
             if (empty($model->slug)) {
                 $model->slug = Str::slug($model->title);
             }
+
+            // Sync scheduling status
+            if ($model->status !== 'draft') {
+                if ($model->published_at && $model->published_at->isFuture()) {
+                    $model->status = 'scheduled';
+                } else {
+                    $model->status = 'published';
+                }
+            }
+
             $model->seo_score = static::calculateSeoScore($model);
         });
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', 'published')
+              ->orWhereNull('status');
+        })->where(function ($q) {
+            $q->whereNull('published_at')
+              ->orWhere('published_at', '<=', now());
+        });
+    }
+
+    public function isPublished(): bool
+    {
+        return in_array($this->status, ['published', null])
+            && ($this->published_at === null || $this->published_at->lte(now()));
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->status === 'scheduled' || ($this->published_at && $this->published_at->isFuture());
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
     }
 
     public static function calculateSeoScore($model): int

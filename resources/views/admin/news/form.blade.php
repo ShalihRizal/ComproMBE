@@ -140,6 +140,27 @@
         font-weight: 600;
     }
 
+    /* Focus Mode (Blank Canvas) Styling */
+    .focus-mode-active {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 30px !important;
+        overflow-y: auto !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+    .focus-mode-active #content {
+        min-height: calc(100vh - 280px) !important;
+        font-size: 1.12rem !important;
+        line-height: 1.8 !important;
+    }
+
     /* Responsive grid */
     @media (max-width: 1024px) {
         .editor-grid {
@@ -147,6 +168,28 @@
         }
     }
 </style>
+@endpush
+
+@push('top_actions')
+<div class="d-flex align-items-center gap-2">
+    @if(isset($news))
+    <a href="{{ route('admin.news.preview', $news->id) }}" target="_blank" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm px-3 fw-semibold" title="Pratinjau artikel (termasuk draft & jadwal)">
+        <i class="fa-solid fa-eye"></i> Pratinjau
+    </a>
+    @else
+    <button type="button" onclick="openPreview()" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm px-3 fw-semibold" title="Pratinjau artikel">
+        <i class="fa-solid fa-eye"></i> Pratinjau
+    </button>
+    @endif
+
+    <button type="button" onclick="submitFormAction('draft')" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm px-3 fw-semibold">
+        <i class="fa-solid fa-file-pen text-secondary"></i> Simpan Draft
+    </button>
+
+    <button type="button" onclick="submitFormAction('publish')" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-3 fw-semibold" style="background-color: #0191b3; border-color: #0191b3;">
+        <i class="fa-solid fa-paper-plane"></i> {{ isset($news) && $news->isPublished() ? 'Perbarui & Terbitkan' : 'Terbitkan' }}
+    </button>
+</div>
 @endpush
 
 @section('content')
@@ -185,13 +228,39 @@
         @method('PUT')
     @endif
 
+    <input type="hidden" name="action" id="formAction" value="publish">
+    <input type="hidden" name="stay" value="1">
+
+    @if(isset($news))
+    <div class="alert alert-light border shadow-sm rounded-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small fw-semibold">Status Artikel:</span>
+            @if($news->isDraft())
+                <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-file-pen"></i> DRAFT (Belum Tayang ke Publik)</span>
+            @elseif($news->isScheduled())
+                <span class="badge bg-info text-dark px-2 py-1"><i class="fa-solid fa-clock"></i> TERJADWAL (Akan Tayang: {{ $news->published_at ? $news->published_at->format('d M Y, H:i') : '' }} WIB)</span>
+            @else
+                <span class="badge bg-success px-2 py-1"><i class="fa-solid fa-circle-check"></i> PUBLISHED (Tayang di Publik)</span>
+            @endif
+            @if($news->category)
+                <span class="badge bg-light text-secondary border px-2 py-1"><i class="fa-solid fa-tag"></i> {{ $news->category }}</span>
+            @endif
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('admin.news.preview', $news->id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-3 fw-semibold">
+                <i class="fa-solid fa-eye me-1"></i> Buka Pratinjau Publik
+            </a>
+        </div>
+    </div>
+    @endif
+
     <div class="editor-grid" style="display: grid; grid-template-columns: 2.1fr 1.3fr; gap: 24px; align-items: start;">
         
         <!-- LEFT COLUMN: MAIN CONTENT & SEO CONFIGURATION -->
         <div>
             
             <!-- SECTION 1: KONTEN UTAMA -->
-            <div class="card-editor">
+            <div class="card-editor" id="contentCard">
                 <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
                     <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">
                         <i class="fa-solid fa-pen-nib text-primary"></i> Konten Artikel Berita
@@ -222,16 +291,41 @@
                     </div>
                 </div>
 
-                <!-- TANGGAL & HEADLINE OPTION -->
+                <!-- TANGGAL, KATEGORI & HEADLINE OPTION -->
                 <div class="row g-3 mb-3">
-                    <div class="col-sm-6">
-                        <label class="form-label" for="published_at">TANGGAL PUBLIKASI *</label>
-                        <input type="date" name="published_at" id="published_at" class="form-control-custom" value="{{ old('published_at', isset($news->published_at) ? $news->published_at->format('Y-m-d') : date('Y-m-d')) }}" required>
+                    <div class="col-sm-5">
+                        <label class="form-label" for="published_at">
+                            <span>TANGGAL & JAM TERBIT *</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;">WIB (UTC+7)</span>
+                        </label>
+                        <input type="datetime-local" name="published_at" id="published_at" class="form-control-custom" value="{{ old('published_at', isset($news->published_at) ? $news->published_at->format('Y-m-d\TH:i') : now('Asia/Jakarta')->format('Y-m-d\TH:i')) }}" required>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-circle-info"></i> Jika waktu diatur masa depan, artikel otomatis <strong>Terjadwal</strong>.
+                        </small>
                     </div>
-                    <div class="col-sm-6 d-flex align-items-end">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; font-weight: 600; color: #0191b3;">
-                            <input type="checkbox" name="is_headline" value="1" {{ old('is_headline', $news->is_headline ?? false) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #0191b3;">
-                            <span><i class="fa-solid fa-star"></i> Headline Utama Beranda</span>
+
+                    <div class="col-sm-4">
+                        <label class="form-label" for="category">
+                            <span>KATEGORI ARTIKEL</span>
+                            <span style="font-size: 0.75rem; font-weight: normal; color: #64748b;">Opsional</span>
+                        </label>
+                        <select name="category" id="category" class="form-select form-control-custom">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach(\App\Models\News::CATEGORIES as $catVal => $catLabel)
+                                <option value="{{ $catVal }}" {{ old('category', $news->category ?? '') === $catVal ? 'selected' : '' }}>
+                                    {{ $catLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                            CNC, Fabrikasi, Laser Cutting, dll.
+                        </small>
+                    </div>
+
+                    <div class="col-sm-3 d-flex align-items-end">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; font-weight: 600; color: #0191b3; font-size: 0.85rem;">
+                            <input type="checkbox" name="is_headline" value="1" {{ old('is_headline', $news->is_headline ?? false) ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: #0191b3;">
+                            <span><i class="fa-solid fa-star text-warning"></i> Headline</span>
                         </label>
                     </div>
                 </div>
@@ -279,28 +373,43 @@
                         </span>
                     </div>
 
-                    <!-- QUICK TOOLBAR: SISIPKAN GAMBAR & FORMAT SEPERTI DI CONTOH -->
-                    <div class="d-flex flex-wrap gap-2 p-2 bg-light border border-bottom-0 rounded-top align-items-center">
-                        <button type="button" class="btn btn-sm btn-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#insertImageModal" style="font-size: 0.82rem;">
+                    <!-- QUICK TOOLBAR: B, I, U, HEADING, LINK, LIST, SPASI, GAMBAR, FOKUS -->
+                    <div class="d-flex flex-wrap gap-1 p-2 bg-light border border-bottom-0 rounded-top align-items-center">
+                        <button type="button" class="btn btn-sm btn-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-sm me-1" data-bs-toggle="modal" data-bs-target="#insertImageModal" style="font-size: 0.82rem;">
                             <i class="fa-solid fa-image"></i> Sisipkan Gambar + Sumber
                         </button>
-                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold" onclick="insertHeading('h3')" style="font-size: 0.82rem;" title="Sisipkan sub-heading H3">
-                            <i class="fa-solid fa-heading"></i> Sub-Judul H3
+                        
+                        <div class="btn-group btn-group-sm me-1" role="group">
+                            <button type="button" class="btn btn-light border bg-white text-dark fw-bold" onclick="formatSelection('strong')" title="Tebal (Bold)"><i class="fa-solid fa-bold"></i></button>
+                            <button type="button" class="btn btn-light border bg-white text-dark fst-italic" onclick="formatSelection('em')" title="Miring (Italic)"><i class="fa-solid fa-italic"></i></button>
+                            <button type="button" class="btn btn-light border bg-white text-dark text-decoration-underline" onclick="formatSelection('u')" title="Garis Bawah (Underline)"><i class="fa-solid fa-underline"></i></button>
+                        </div>
+
+                        <div class="btn-group btn-group-sm me-1" role="group">
+                            <button type="button" class="btn btn-light border bg-white text-dark fw-semibold" onclick="insertHeading('h2')" style="font-size: 0.82rem;" title="Sub-Judul H2">H2</button>
+                            <button type="button" class="btn btn-light border bg-white text-dark fw-semibold" onclick="insertHeading('h3')" style="font-size: 0.82rem;" title="Sub-Judul H3">H3</button>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold me-1" onclick="insertLinkPrompt()" style="font-size: 0.82rem;" title="Sisipkan Tautan (Link)">
+                            <i class="fa-solid fa-link"></i> Link
                         </button>
-                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold" onclick="insertHeading('h2')" style="font-size: 0.82rem;" title="Sisipkan sub-heading H2">
-                            <i class="fa-solid fa-heading"></i> Sub-Judul H2
+
+                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold me-1" onclick="insertList()" style="font-size: 0.82rem;" title="Sisipkan Daftar / List">
+                            <i class="fa-solid fa-list-ul"></i> List
                         </button>
-                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold" onclick="insertLinkPrompt()" style="font-size: 0.82rem;" title="Sisipkan link tautan">
-                            <i class="fa-solid fa-link"></i> Tautan / Link
+
+                        <button type="button" class="btn btn-sm btn-light border bg-white text-dark fw-semibold me-1" onclick="insertSpacer()" style="font-size: 0.82rem;" title="Sisipkan Spasi / Baris Baru Paragraf">
+                            <i class="fa-solid fa-arrows-up-down"></i> Spasi
                         </button>
-                        <span class="text-muted ms-auto small d-none d-md-inline" style="font-size: 0.76rem;">
-                            <i class="fa-solid fa-wand-magic-sparkles text-warning"></i> Format otomatis langsung terpasang
-                        </span>
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold ms-auto" id="btnFocusMode" onclick="toggleFocusMode()" style="font-size: 0.82rem;" title="Mode Fokus / Layar Penuh (Halaman Bersih)">
+                            <i class="fa-solid fa-expand"></i> Mode Fokus
+                        </button>
                     </div>
 
                     <textarea name="content" id="content" class="form-control-custom" style="min-height: 320px; line-height: 1.6; border-top-left-radius: 0; border-top-right-radius: 0;" required placeholder="Tuliskan isi artikel lengkap di sini...">{{ old('content', $news->content ?? '') }}</textarea>
                     <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
-                        <i class="fa-solid fa-lightbulb text-warning"></i> <strong>Tips:</strong> Klik tombol <strong>"Sisipkan Gambar + Sumber"</strong> di atas untuk memasukkan foto di tengah artikel lengkap dengan keterangan sumber seperti pada majalah atau portal berita.
+                        <i class="fa-solid fa-lightbulb text-warning"></i> <strong>Tips:</strong> Gunakan tombol <strong>Bold, Italic, Underline</strong>, dan <strong>Sisipkan Gambar + Sumber</strong> untuk merapikan artikel seperti portal berita modern.
                     </small>
                 </div>
             </div>
@@ -324,6 +433,60 @@
                     <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
                         Kata kunci utama yang ingin ditargetkan agar artikel ini mudah ditemukan di Google.
                     </small>
+                </div>
+
+                @php
+                    $existingSecKeywords = old('secondary_keywords', $news->secondary_keywords ?? []);
+                    if (is_string($existingSecKeywords)) {
+                        $decoded = json_decode($existingSecKeywords, true);
+                        $existingSecKeywords = is_array($decoded) ? $decoded : preg_split('/[,;\n]+/', $existingSecKeywords);
+                    }
+                    if (!is_array($existingSecKeywords)) {
+                        $existingSecKeywords = [];
+                    }
+                    $sec1 = $existingSecKeywords[0] ?? '';
+                    $sec2 = $existingSecKeywords[1] ?? '';
+                    $sec3 = $existingSecKeywords[2] ?? '';
+                    $sec4 = $existingSecKeywords[3] ?? '';
+                @endphp
+
+                <!-- KEYWORDS PENDUKUNG (SECONDARY KEYWORDS - TOTAL 4) -->
+                <div class="mb-3 p-3 bg-white rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label m-0">
+                            <span class="fw-bold text-dark"><i class="fa-solid fa-tags text-primary"></i> KEYWORDS PENDUKUNG (SECONDARY KEYWORDS - TOTAL 4)</span>
+                        </label>
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" style="font-size: 0.72rem;">RankMath SEO Engine</span>
+                    </div>
+                    <small class="text-muted d-block mb-2" style="font-size: 0.78rem;">
+                        Tambahkan hingga 4 kata kunci turunan/pendukung yang relevan. Sistem SEO akan memeriksa keberadaan kata kunci ini di isi artikel, sub-judul, dan deskripsi meta.
+                    </small>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light text-muted fw-bold">#1</span>
+                                <input type="text" name="secondary_keywords[]" class="form-control sec-kw-input" value="{{ $sec1 }}" placeholder="Keyword pendukung 1">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light text-muted fw-bold">#2</span>
+                                <input type="text" name="secondary_keywords[]" class="form-control sec-kw-input" value="{{ $sec2 }}" placeholder="Keyword pendukung 2">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light text-muted fw-bold">#3</span>
+                                <input type="text" name="secondary_keywords[]" class="form-control sec-kw-input" value="{{ $sec3 }}" placeholder="Keyword pendukung 3">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light text-muted fw-bold">#4</span>
+                                <input type="text" name="secondary_keywords[]" class="form-control sec-kw-input" value="{{ $sec4 }}" placeholder="Keyword pendukung 4">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- META TITLE -->
@@ -378,11 +541,23 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div class="d-flex gap-3 align-items-center mb-4">
-                <button type="submit" class="btn btn-mbe py-3 px-4 fs-6 shadow-sm">
-                    <i class="fa-solid fa-floppy-disk me-2"></i> {{ isset($news) ? 'Simpan Perubahan Berita' : 'Terbitkan Berita Sekarang' }}
+            <div class="d-flex gap-2 align-items-center mb-4 flex-wrap">
+                <button type="button" onclick="submitFormAction('publish')" class="btn btn-mbe py-2 px-4 fs-6 shadow-sm">
+                    <i class="fa-solid fa-paper-plane me-2"></i> {{ isset($news) && $news->isPublished() ? 'Simpan Perubahan Berita' : 'Terbitkan Berita' }}
                 </button>
-                <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary py-3 px-4">
+                <button type="button" onclick="submitFormAction('draft')" class="btn btn-outline-secondary py-2 px-3 fw-semibold">
+                    <i class="fa-solid fa-file-pen me-2"></i> Simpan Draft
+                </button>
+                @if(isset($news))
+                <a href="{{ route('admin.news.preview', $news->id) }}" target="_blank" class="btn btn-outline-info py-2 px-3 fw-semibold">
+                    <i class="fa-solid fa-eye me-2"></i> Pratinjau
+                </a>
+                @else
+                <button type="button" onclick="openPreview()" class="btn btn-outline-info py-2 px-3 fw-semibold">
+                    <i class="fa-solid fa-eye me-2"></i> Pratinjau
+                </button>
+                @endif
+                <a href="{{ route('admin.news.index') }}" class="btn btn-link text-muted ms-auto text-decoration-none">
                     Batal
                 </a>
             </div>
@@ -414,6 +589,17 @@
                     <div id="seoIncompleteNotice" class="text-muted mt-1" style="font-size: 0.78rem; display: none;">
                         <i class="fa-solid fa-circle-exclamation text-secondary"></i> Focus keyword belum diisi, analisis belum lengkap.
                     </div>
+                </div>
+
+                <!-- SECONDARY KEYWORDS ANALYSIS (RankMath Style) -->
+                <div id="secondaryKeywordsContainer" class="p-3 rounded-3 border bg-light mt-3" style="display: none;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #0191b3;">
+                            <i class="fa-solid fa-tags me-1"></i> Keywords Pendukung (<span id="countSecKw">0</span>)
+                        </span>
+                        <span class="badge bg-white text-muted border" style="font-size: 0.68rem;">RankMath Check</span>
+                    </div>
+                    <div id="listSecondaryKeywords" style="display: flex; flex-direction: column; gap: 8px;"></div>
                 </div>
 
                 <!-- ACCORDION / GROUPED CHECKLIST (PASSED, WARNINGS, FAILED) -->
@@ -530,6 +716,71 @@ const INLINE_UPLOAD_ENDPOINT = '{{ route("admin.news.upload-inline-image") }}';
 
 // State & Cache
 let debounceTimer = null;
+
+function formatSelection(tag) {
+    const textarea = document.getElementById('content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const defaultText = tag === 'strong' ? 'teks tebal' : (tag === 'em' ? 'teks miring' : 'teks garis bawah');
+    const template = `<${tag}>${selected || defaultText}</${tag}>`;
+    insertTextAtCursor(textarea, template);
+    runSeoAnalysis();
+}
+
+function insertList() {
+    const textarea = document.getElementById('content');
+    const template = `\n<ul>\n    <li>Poin pembahasan pertama</li>\n    <li>Poin pembahasan kedua</li>\n    <li>Poin pembahasan ketiga</li>\n</ul>\n\n`;
+    insertTextAtCursor(textarea, template);
+    runSeoAnalysis();
+}
+
+function insertSpacer() {
+    const textarea = document.getElementById('content');
+    const template = `\n\n<p>&nbsp;</p>\n\n`;
+    insertTextAtCursor(textarea, template);
+    runSeoAnalysis();
+}
+
+function toggleFocusMode() {
+    const card = document.getElementById('contentCard');
+    const btn = document.getElementById('btnFocusMode');
+    card.classList.toggle('focus-mode-active');
+    if (card.classList.contains('focus-mode-active')) {
+        btn.innerHTML = '<i class="fa-solid fa-compress"></i> Keluar Mode Fokus';
+        btn.classList.add('btn-dark');
+        btn.classList.remove('btn-outline-secondary');
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-expand"></i> Mode Fokus';
+        btn.classList.remove('btn-dark');
+        btn.classList.add('btn-outline-secondary');
+    }
+}
+
+function submitFormAction(action) {
+    const form = document.getElementById('newsForm');
+    const actionInput = document.getElementById('formAction');
+    actionInput.value = action;
+
+    if (action === 'draft') {
+        const title = document.getElementById('title').value.trim();
+        if (!title) {
+            alert('Silakan masukkan Judul Berita terlebih dahulu untuk menyimpan draft.');
+            document.getElementById('title').focus();
+            return;
+        }
+        const content = document.getElementById('content');
+        if (!content.value.trim()) {
+            content.value = '<p>Draft konten artikel dalam penulisan.</p>';
+        }
+    }
+
+    form.submit();
+}
+
+function openPreview() {
+    alert('Untuk melihat pratinjau artikel baru, silakan klik tombol "Simpan Draft" terlebih dahulu. Setelah tersimpan, pratinjau artikel akan langsung dapat dibuka.');
+}
 
 function insertHeading(tag) {
     const textarea = document.getElementById('content');
@@ -1091,6 +1342,61 @@ function evaluateSeoLocal() {
     checks.forEach(c => totalScore += c.score);
     totalScore = Math.max(0, Math.min(100, Math.round(totalScore)));
 
+    // Render Secondary Keywords (RankMath style)
+    const secInputs = document.querySelectorAll('.sec-kw-input');
+    const secKeywords = [];
+    secInputs.forEach(input => {
+        const val = input.value.trim();
+        if (val && !secKeywords.map(k => k.toLowerCase()).includes(val.toLowerCase())) {
+            secKeywords.push(val);
+        }
+    });
+
+    const secContainer = document.getElementById('secondaryKeywordsContainer');
+    const countSecKw = document.getElementById('countSecKw');
+    const listSecKw = document.getElementById('listSecondaryKeywords');
+
+    if (secKeywords.length > 0) {
+        secContainer.style.display = 'block';
+        countSecKw.innerText = secKeywords.length;
+        listSecKw.innerHTML = '';
+
+        const headingsMatch = rawContent.match(/<h[2-4][^>]*>(.*?)<\/h[2-4]>/gi) || [];
+        const headingsText = headingsMatch.map(h => cleanHtml(h)).join(' ').toLowerCase();
+
+        secKeywords.forEach((kw, idx) => {
+            const kwLower = kw.toLowerCase();
+            const inContent = cleanContent.toLowerCase().includes(kwLower);
+            const inHeadings = headingsText.includes(kwLower);
+            const inMetaDesc = metaDesc.toLowerCase().includes(kwLower);
+            const inTitle = effectiveTitle.toLowerCase().includes(kwLower);
+
+            let matchPlaces = [];
+            if (inContent) matchPlaces.push('Konten');
+            if (inHeadings) matchPlaces.push('Sub-Judul');
+            if (inMetaDesc) matchPlaces.push('Meta Deskripsi');
+            if (inTitle) matchPlaces.push('Judul');
+
+            const isPassed = matchPlaces.length > 0;
+            const item = document.createElement('div');
+            item.className = 'p-2 rounded border bg-white small';
+            item.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="fa-solid ${isPassed ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-warning'} me-1"></i>
+                        <strong>#${idx + 1} "${kw}"</strong>
+                    </div>
+                    <span class="badge ${isPassed ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'}">
+                        ${isPassed ? matchPlaces.join(', ') : 'Belum Ditemukan'}
+                    </span>
+                </div>
+            `;
+            listSecKw.appendChild(item);
+        });
+    } else {
+        secContainer.style.display = 'none';
+    }
+
     // Render Checklist UI
     renderChecklistUI(checks, totalScore, !!focusKeyword);
 }
@@ -1249,10 +1555,17 @@ function renderChecklistUI(checks, score, hasKeyword) {
 function verifySeoWithServer() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
+        const secKwList = [];
+        document.querySelectorAll('.sec-kw-input').forEach(input => {
+            const val = input.value.trim();
+            if (val) secKwList.push(val);
+        });
+
         const payload = {
             title: document.getElementById('title').value,
             meta_title: document.getElementById('meta_title').value,
             focus_keyword: document.getElementById('focus_keyword').value,
+            secondary_keywords: secKwList,
             meta_description: document.getElementById('meta_description').value,
             slug: document.getElementById('slug').value,
             content: document.getElementById('content').value,
@@ -1297,6 +1610,11 @@ document.addEventListener('DOMContentLoaded', function() {
             el.addEventListener('keyup', runSeoAnalysis);
             el.addEventListener('change', runSeoAnalysis);
         }
+    });
+
+    document.querySelectorAll('.sec-kw-input').forEach(input => {
+        input.addEventListener('input', runSeoAnalysis);
+        input.addEventListener('change', runSeoAnalysis);
     });
 
     // Auto-generate slug from title if slug input is empty

@@ -65,8 +65,17 @@
         font-size: 1.35rem;
     }
     .article-body p {
-        margin-bottom: 18px;
+        margin-bottom: 20px;
         line-height: 1.85;
+    }
+    .article-body a {
+        color: #0056b3 !important;
+        font-weight: 700 !important;
+        text-decoration: underline !important;
+        transition: color 0.2s ease;
+    }
+    .article-body a:hover {
+        color: #003875 !important;
     }
     .article-body figure {
         margin: 32px 0;
@@ -106,8 +115,43 @@
 <!-- SINGLE ARTICLE CONTENT -->
 <section class="section-padding" style="background-color: #ffffff;">
     <div class="container" style="max-width: 900px;">
-        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px; font-size: 0.9rem; color: #0191b3; font-weight: 600;">
+        @if(isset($isPreview) && $isPreview)
+        <div style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="background: #f59e0b; color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
+                    <div>
+                        <strong style="color: #92400e; font-size: 1.05rem;">Mode Pratinjau Admin</strong>
+                        <div style="color: #b45309; font-size: 0.88rem; margin-top: 2px;">
+                            Status Artikel: 
+                            @if($news->isDraft())
+                                <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-file-pen"></i> Draft (Belum Tayang ke Publik)</span>
+                            @elseif($news->isScheduled())
+                                <span class="badge bg-info text-dark px-2 py-1"><i class="fa-solid fa-clock"></i> Terjadwal (Tayang Otomatis: {{ $news->published_at ? $news->published_at->format('d M Y, H:i') : '' }} WIB)</span>
+                            @else
+                                <span class="badge bg-secondary px-2 py-1">Pratinjau Khusus</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @if(session('admin_logged_in'))
+                <a href="{{ route('admin.news.edit', $news->id) }}" class="btn btn-sm btn-warning fw-bold px-3 py-2" style="border-radius: 8px;">
+                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit Artikel
+                </a>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 0.9rem; color: #0191b3; font-weight: 600; flex-wrap: wrap;">
             <span><i class="fa-regular fa-calendar-days"></i> {{ \Carbon\Carbon::parse($news->published_at)->format('d F Y') }}</span>
+            @if($news->category)
+            <span class="news-badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700; padding: 3px 10px; border-radius: 20px; font-size: 0.82rem;">
+                <i class="fa-solid fa-tag"></i> {{ $news->category }}
+            </span>
+            @endif
             @if($news->is_headline)
             <span class="news-badge" style="background: #00a859;"><i class="fa-solid fa-star"></i> Headline Utama</span>
             @endif

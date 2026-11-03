@@ -56,6 +56,28 @@ class SeoScoringService
 
         [$statusKey, $statusLabel, $statusColor] = $this->resolveStatusMeta($score, $hasKeyword);
 
+        $secondaryAnalysis = [];
+        foreach ($normalized['secondary_keywords'] as $secKw) {
+            $count = $this->countPhraseOccurrences($normalized['clean_content'], $secKw);
+            $inHeadings = $this->keywordAppearsInHeadings($normalized['raw_content'], $secKw);
+            $inMetaDesc = $this->textContainsPhrase($normalized['meta_description'], $secKw);
+            $inTitle = $this->textContainsPhrase($normalized['effective_title'], $secKw);
+
+            $passedPoints = ($count > 0 ? 1 : 0) + ($inHeadings ? 1 : 0) + ($inMetaDesc ? 1 : 0) + ($inTitle ? 1 : 0);
+            $status = $count > 0 ? ($passedPoints >= 2 ? 'passed' : 'warning') : 'failed';
+
+            $secondaryAnalysis[] = [
+                'keyword' => $secKw,
+                'in_content' => $count > 0,
+                'content_count' => $count,
+                'in_headings' => $inHeadings,
+                'in_meta_description' => $inMetaDesc,
+                'in_title' => $inTitle,
+                'status' => $status,
+                'score_percent' => (int) round(($passedPoints / 4) * 100),
+            ];
+        }
+
         return [
             'score' => $score,
             'max_score' => 100,
@@ -65,6 +87,7 @@ class SeoScoringService
             'has_focus_keyword' => $hasKeyword,
             'word_count' => $normalized['word_count'],
             'checks' => $checks,
+            'secondary_keywords' => $secondaryAnalysis,
         ];
     }
 
@@ -89,6 +112,7 @@ class SeoScoringService
             $metaTitle = (string) ($data->meta_title ?? '');
             $metaDescription = (string) ($data->meta_description ?? '');
             $focusKeyword = (string) ($data->focus_keyword ?? '');
+            $secondaryKeywords = $data->secondary_keywords ?? [];
             $slug = (string) ($data->slug ?? '');
             $content = (string) ($data->content ?? '');
             $image = (string) ($data->image ?? '');
@@ -98,11 +122,34 @@ class SeoScoringService
             $metaTitle = (string) ($data['meta_title'] ?? '');
             $metaDescription = (string) ($data['meta_description'] ?? '');
             $focusKeyword = (string) ($data['focus_keyword'] ?? '');
+            $secondaryKeywords = $data['secondary_keywords'] ?? [];
             $slug = (string) ($data['slug'] ?? '');
             $content = (string) ($data['content'] ?? '');
             $image = (string) ($data['image'] ?? '');
             $imageAlt = (string) ($data['image_alt'] ?? '');
         }
+
+        if (is_string($secondaryKeywords)) {
+            $decoded = json_decode($secondaryKeywords, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $secondaryKeywords = $decoded;
+            } else {
+                $secondaryKeywords = preg_split('/[,;\n]+/', $secondaryKeywords);
+            }
+        }
+
+        if (! is_array($secondaryKeywords)) {
+            $secondaryKeywords = [];
+        }
+
+        $cleanSecondary = [];
+        foreach ($secondaryKeywords as $kw) {
+            $t = trim((string) $kw);
+            if ($t !== '' && ! in_array(mb_strtolower($t), array_map('mb_strtolower', $cleanSecondary))) {
+                $cleanSecondary[] = $t;
+            }
+        }
+        $cleanSecondary = array_slice($cleanSecondary, 0, 4);
 
         $effectiveTitle = trim($metaTitle !== '' ? $metaTitle : $title);
         $cleanContent = $this->sanitizeHtml($content);
@@ -114,6 +161,7 @@ class SeoScoringService
             'effective_title' => $effectiveTitle,
             'meta_description' => trim($metaDescription),
             'focus_keyword' => trim($focusKeyword),
+            'secondary_keywords' => $cleanSecondary,
             'slug' => trim($slug !== '' ? $slug : Str::slug($title)),
             'raw_content' => $content,
             'clean_content' => $cleanContent,
@@ -756,6 +804,29 @@ class SeoScoringService
         }
 
         return str_contains($trimmed, 'makben.co.id');
+    }
+
+    /**
+     * Check if a keyword/phrase appears inside any heading tag (H1-H4).
+     */
+    protected function keywordAppearsInHeadings(string $rawContent, string $keyword): bool
+    {
+        if ($keyword === '' || $rawContent === '') {
+            return false;
+        }
+
+        preg_match_all('/<(h[1-4])[^>]*>(.*?)<\/\1>/is', $rawContent, $matches);
+        if (empty($matches[2])) {
+            return false;
+        }
+
+        foreach ($matches[2] as $headingText) {
+            if ($this->textContainsPhrase(strip_tags($headingText), $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

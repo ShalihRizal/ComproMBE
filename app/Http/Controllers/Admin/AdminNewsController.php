@@ -31,6 +31,16 @@ class AdminNewsController extends Controller
         return view('admin.news.form');
     }
 
+    public function preview($id)
+    {
+        $this->checkAuth();
+        $news = News::findOrFail($id);
+        $recentNews = News::published()->where('id', '!=', $news->id)->orderBy('published_at', 'desc')->take(3)->get();
+        $isPreview = true;
+
+        return view('news.show', compact('news', 'recentNews', 'isPreview'));
+    }
+
     public function store(Request $request)
     {
         $this->checkAuth();
@@ -39,11 +49,13 @@ class AdminNewsController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'published_at' => 'required|date',
+            'category' => 'nullable|string|max:100',
             'content' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'image_alt' => 'nullable|string|max:255',
             'excerpt' => 'nullable|string|max:500',
             'focus_keyword' => 'nullable|string|max:150',
+            'secondary_keywords' => 'nullable',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
         ]);
@@ -64,7 +76,25 @@ class AdminNewsController extends Controller
             $slug = $baseSlug.'-'.$counter++;
         }
 
-        // If marked as headline, uncheck existing headlines if needed or set true
+        // Parse published_at with Asia/Jakarta timezone
+        $publishedAt = $request->filled('published_at')
+            ? \Carbon\Carbon::parse($request->published_at, 'Asia/Jakarta')
+            : now('Asia/Jakarta');
+
+        // Resolve editorial status (draft, scheduled, published)
+        $action = $request->input('action', 'publish');
+        if ($action === 'draft' || $request->input('status') === 'draft') {
+            $status = 'draft';
+        } elseif ($publishedAt->isFuture()) {
+            $status = 'scheduled';
+        } else {
+            $status = 'published';
+        }
+
+        // Sanitize secondary keywords (up to 4)
+        $secondaryKeywords = $this->sanitizeSecondaryKeywords($request->input('secondary_keywords'));
+
+        // If marked as headline, uncheck existing headlines
         if ($request->has('is_headline')) {
             News::where('is_headline', true)->update(['is_headline' => false]);
         }
@@ -72,18 +102,31 @@ class AdminNewsController extends Controller
         $news = new News;
         $news->title = $request->title;
         $news->slug = $slug;
-        $news->published_at = $request->published_at;
+        $news->published_at = $publishedAt;
+        $news->status = $status;
+        $news->category = $request->category;
         $news->image = $imagePath;
         $news->image_alt = $request->image_alt;
         $news->excerpt = $request->excerpt ?? Str::limit(strip_tags($request->content), 150);
         $news->content = $request->content;
         $news->is_headline = $request->has('is_headline');
         $news->focus_keyword = $request->focus_keyword;
+        $news->secondary_keywords = $secondaryKeywords;
         $news->meta_title = $request->meta_title ?? $request->title;
         $news->meta_description = $request->meta_description ?? Str::limit(strip_tags($request->content), 150);
         $news->save();
 
-        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil diterbitkan!');
+        $successMsg = match ($status) {
+            'draft' => 'Draft artikel berhasil disimpan!',
+            'scheduled' => 'Artikel berhasil dijadwalkan untuk terbit pada '.$publishedAt->format('d M Y, H:i').' WIB!',
+            default => 'Artikel berhasil diterbitkan ke website!',
+        };
+
+        if ($request->input('stay') == '1' || $request->has('stay') || $request->has('save_and_continue') || $action === 'draft') {
+            return redirect()->route('admin.news.edit', $news->id)->with('success', $successMsg);
+        }
+
+        return redirect()->route('admin.news.index')->with('success', $successMsg);
     }
 
     public function edit($id)
@@ -103,11 +146,13 @@ class AdminNewsController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'published_at' => 'required|date',
+            'category' => 'nullable|string|max:100',
             'content' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'image_alt' => 'nullable|string|max:255',
             'excerpt' => 'nullable|string|max:500',
             'focus_keyword' => 'nullable|string|max:150',
+            'secondary_keywords' => 'nullable',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
         ]);
@@ -127,23 +172,80 @@ class AdminNewsController extends Controller
             $slug = $baseSlug.'-'.$counter++;
         }
 
+        // Parse published_at with Asia/Jakarta timezone
+        $publishedAt = $request->filled('published_at')
+            ? \Carbon\Carbon::parse($request->published_at, 'Asia/Jakarta')
+            : ($news->published_at ?? now('Asia/Jakarta'));
+
+        // Resolve editorial status (draft, scheduled, published)
+        $action = $request->input('action', 'publish');
+        if ($action === 'draft' || $request->input('status') === 'draft') {
+            $status = 'draft';
+        } elseif ($publishedAt->isFuture()) {
+            $status = 'scheduled';
+        } else {
+            $status = 'published';
+        }
+
+        // Sanitize secondary keywords (up to 4)
+        $secondaryKeywords = $this->sanitizeSecondaryKeywords($request->input('secondary_keywords'));
+
         if ($request->has('is_headline') && ! $news->is_headline) {
             News::where('is_headline', true)->update(['is_headline' => false]);
         }
 
         $news->title = $request->title;
         $news->slug = $slug;
-        $news->published_at = $request->published_at;
+        $news->published_at = $publishedAt;
+        $news->status = $status;
+        $news->category = $request->category;
         $news->image_alt = $request->image_alt;
         $news->excerpt = $request->excerpt ?? Str::limit(strip_tags($request->content), 150);
         $news->content = $request->content;
         $news->is_headline = $request->has('is_headline');
         $news->focus_keyword = $request->focus_keyword;
+        $news->secondary_keywords = $secondaryKeywords;
         $news->meta_title = $request->meta_title ?? $request->title;
         $news->meta_description = $request->meta_description ?? Str::limit(strip_tags($request->content), 150);
         $news->save();
 
-        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil diperbarui!');
+        $successMsg = match ($status) {
+            'draft' => 'Draft artikel berhasil diperbarui!',
+            'scheduled' => 'Artikel berhasil disimpan dan dijadwalkan untuk terbit pada '.$publishedAt->format('d M Y, H:i').' WIB!',
+            default => 'Artikel berhasil diperbarui dan diterbitkan!',
+        };
+
+        if ($request->input('stay') == '1' || $request->has('stay') || $request->has('save_and_continue') || $action === 'draft') {
+            return redirect()->route('admin.news.edit', $news->id)->with('success', $successMsg);
+        }
+
+        return redirect()->route('admin.news.index')->with('success', $successMsg);
+    }
+
+    protected function sanitizeSecondaryKeywords(mixed $raw): array
+    {
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $raw = $decoded;
+            } else {
+                $raw = preg_split('/[,;\n]+/', $raw);
+            }
+        }
+
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $clean = [];
+        foreach ($raw as $item) {
+            $str = trim((string) $item);
+            if ($str !== '' && ! in_array(mb_strtolower($str), array_map('mb_strtolower', $clean))) {
+                $clean[] = $str;
+            }
+        }
+
+        return array_values(array_slice($clean, 0, 4));
     }
 
     public function analyzeSeo(Request $request)
