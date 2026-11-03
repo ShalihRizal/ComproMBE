@@ -203,4 +203,31 @@
     </div>
 </section>
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const articleBody = document.querySelector('.news-article-body');
+    if (!articleBody) return;
+    articleBody.querySelectorAll('a').forEach(function (link) {
+        let href = link.getAttribute('href');
+        if (!href) return;
+        href = href.trim();
+        if (!href.startsWith('/') && !href.startsWith('#') && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+            href = 'https://' + href;
+            link.setAttribute('href', href);
+        }
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+            try {
+                const urlObj = new URL(href);
+                if (urlObj.hostname !== window.location.hostname) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            } catch (e) {}
+        }
+    });
+});
+</script>
+@endpush
+
 @endsection

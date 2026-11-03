@@ -175,4 +175,31 @@ class NewsWorkflowTest extends TestCase
         $this->assertEquals('piping ducting', $sec3['keyword']);
         $this->assertFalse($sec3['in_content']);
     }
+
+    public function test_news_content_automatically_normalizes_external_and_relative_links(): void
+    {
+        $rawHtml = '<p>Kunjungi <a href="google.com">Google Search</a> dan lihat <a href="/layanan">Layanan Kami</a> serta <a href="https://youtube.com">YouTube</a>.</p>';
+
+        $news = News::create([
+            'title' => 'Uji Coba Normalisasi Link Otomatis',
+            'slug' => 'uji-coba-normalisasi-link-otomatis',
+            'published_at' => now(),
+            'status' => 'published',
+            'content' => $rawHtml,
+            'category' => 'CNC',
+        ]);
+
+        $content = $news->content;
+
+        // google.com should be prefixed with https:// and have target="_blank" and rel="noopener noreferrer"
+        $this->assertStringContainsString('href="https://google.com"', $content);
+        $this->assertStringContainsString('target="_blank"', $content);
+        $this->assertStringContainsString('rel="noopener noreferrer"', $content);
+
+        // /layanan should remain unchanged
+        $this->assertStringContainsString('href="/layanan"', $content);
+
+        // https://youtube.com should have target="_blank" and rel="noopener noreferrer"
+        $this->assertStringContainsString('href="https://youtube.com"', $content);
+    }
 }

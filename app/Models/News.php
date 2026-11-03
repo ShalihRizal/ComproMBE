@@ -62,6 +62,10 @@ class News extends Model
                 }
             }
 
+            if (!empty($model->content)) {
+                $model->content = static::normalizeHtmlLinks($model->content);
+            }
+
             $model->seo_score = static::calculateSeoScore($model);
         });
     }
@@ -126,5 +130,47 @@ class News extends Model
     public function getEffectiveTitleAttribute(): string
     {
         return ! empty($this->meta_title) ? $this->meta_title : $this->title;
+    }
+
+    public function getContentAttribute($value): ?string
+    {
+        return static::normalizeHtmlLinks($value);
+    }
+
+    public static function normalizeHtmlLinks(?string $html): ?string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        return preg_replace_callback('/<a\s+([^>]*?)href=(["\'])(.*?)\2([^>]*?)>/i', function ($matches) {
+            $before = trim($matches[1]);
+            $quote = $matches[2];
+            $href = trim($matches[3]);
+            $after = trim($matches[4]);
+
+            if ($href === '' || str_starts_with($href, '#') || str_starts_with($href, '/') || str_starts_with($href, 'mailto:') || str_starts_with($href, 'tel:') || str_starts_with($href, 'javascript:')) {
+                return $matches[0];
+            }
+
+            if (!preg_match('/^https?:\/\//i', $href)) {
+                $href = 'https://' . $href;
+            }
+
+            $allOtherAttrs = ($before ? $before . ' ' : '') . $after;
+            $isExternal = !str_contains(strtolower($href), 'makben.co.id');
+
+            if ($isExternal) {
+                if (!preg_match('/target=["\'][^"\']*["\']/i', $allOtherAttrs)) {
+                    $after .= ' target="_blank"';
+                }
+                if (!preg_match('/rel=["\'][^"\']*["\']/i', $allOtherAttrs)) {
+                    $after .= ' rel="noopener noreferrer"';
+                }
+            }
+
+            $parts = array_filter([$before, 'href=' . $quote . $href . $quote, trim($after)]);
+            return '<a ' . implode(' ', $parts) . '>';
+        }, $html);
     }
 }

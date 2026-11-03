@@ -791,12 +791,26 @@ function insertHeading(tag) {
 }
 
 function insertLinkPrompt() {
-    const url = prompt('Masukkan URL tautan (contoh: /layanan atau /produk):', '/layanan');
-    if (!url) return;
-    const text = prompt('Teks tautan yang ditampilkan kepada pembaca:', 'Layanan Kami');
-    if (!text) return;
     const textarea = document.getElementById('content');
-    const template = `<a href="${url}">${text}</a>`;
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(startPos, endPos).trim();
+
+    const rawUrl = prompt('Masukkan URL tautan (contoh: https://google.com atau /layanan):', 'https://');
+    if (!rawUrl) return;
+
+    let cleanUrl = rawUrl.trim();
+    if (!cleanUrl.startsWith('/') && !cleanUrl.startsWith('#') && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://') && !cleanUrl.startsWith('mailto:') && !cleanUrl.startsWith('tel:')) {
+        cleanUrl = 'https://' + cleanUrl;
+    }
+
+    const defaultText = selectedText || 'Kunjungi Tautan';
+    const text = prompt('Teks tautan yang ditampilkan kepada pembaca:', defaultText);
+    if (!text) return;
+
+    const isExternal = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://');
+    const targetRel = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    const template = `<a href="${cleanUrl}"${targetRel}>${text}</a>`;
     insertTextAtCursor(textarea, template);
     runSeoAnalysis();
 }
